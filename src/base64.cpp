@@ -46,16 +46,21 @@ std::string Base64::decode(const std::string& input, const char* skip_chars) {
     while (p < input.size()) {
         for (int n = 0; n < 4; n++) {
             while (true) {
+                if (p >= input.size()) {
+                    if (n < 2)
+                        throw std::runtime_error("Unexpected end of input");
+                    i[n] = 64;
+                    break;
+                }
                 if ((i[n] = reverseTable[input[p]]) != 255) {
                     if ((i[n] == 64 && n < 2) || (n == 3 && i[n - 1] == 64 && i[n] != 64))
                         throw std::runtime_error("Invalid '=' character");
-                    p++;
+                    ++p;
                     break;
                 }
                 if (strchr(skip_chars, input[p]) == NULL)
                     throw std::runtime_error("Invalid character at " + std::to_string(p));
-                if (++p == input.size())
-                    throw std::runtime_error("Unexpected end of input");
+                ++p;
             }
         }
         output.push_back((unsigned char) ((i[0] << 2) | ((i[1] >> 4) & 3)));
