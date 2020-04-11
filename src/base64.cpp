@@ -15,23 +15,37 @@ void Base64::initReverseTable() {
     reverseTableInitialized = true;
 }
 
-std::string Base64::encode(const std::string& input) {
-    size_t block_count = (input.size() + 2) / 3;
+std::string Base64::encode(const std::string& input, bool padded) {
+    const auto n = input.length();
+    const auto block_count = (n + 2) / 3;
     std::string outp;
-    outp.resize(block_count * 4);
+    outp.resize(padded ? (block_count * 4) : (n / 3 * 4 + (n % 3 == 0 ? 0 : 1 + n % 3)));
     unsigned char i0, i1, i2, n0, n1, n2, n3;
     for (size_t i = 0; i < block_count; i++) {
         i0 = (unsigned char) input[i * 3];
-        i1 = (unsigned char) (input.length() > i * 3 + 1 ? input[i * 3 + 1] : 0);
-        i2 = (unsigned char) (input.length() > i * 3 + 2 ? input[i * 3 + 2] : 0);
+        i1 = (unsigned char) (n > i * 3 + 1 ? input[i * 3 + 1] : 0);
+        i2 = (unsigned char) (n > i * 3 + 2 ? input[i * 3 + 2] : 0);
         n0 = (unsigned char) ((i0 >> 2) & 0x3f);
         n1 = (unsigned char) (((i0 & 3) << 4) | ((i1 >> 4) & 0xf));
         n2 = (unsigned char) (((i1 & 0xf) << 2) | ((i2 >> 6) & 3));
         n3 = (unsigned char) (i2 & 0x3f);
-        outp[i * 4] = table[n0];
-        outp[i * 4 + 1] = table[n1];
-        outp[i * 4 + 2] = input.length() > i * 3 + 1 ? table[n2] : '=';
-        outp[i * 4 + 3] = input.length() > i * 3 + 2 ? table[n3] : '=';
+        if (i != block_count - 1) {
+            outp[i * 4] = table[n0];
+            outp[i * 4 + 1] = table[n1];
+            outp[i * 4 + 2] = table[n2];
+            outp[i * 4 + 3] = table[n3];
+        } else {
+            outp[i * 4] = table[n0];
+            outp[i * 4 + 1] = table[n1];
+            if (n > i * 3 + 1)
+                outp[i * 4 + 2] = table[n2];
+            else if (padded)
+                outp[i * 4 + 2] = '=';
+            if (n > i * 3 + 2)
+                outp[i * 4 + 3] = table[n3];
+            else if (padded)
+                outp[i * 4 + 3] = '=';
+        }
     }
     return std::move(outp);
 }

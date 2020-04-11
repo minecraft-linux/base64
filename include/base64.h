@@ -14,7 +14,7 @@ private:
 
 public:
 
-    static std::string encode(const std::string& input);
+    static std::string encode(const std::string& input, bool padded = true);
 
     static std::string decode(const std::string& input, const char* skipChars = "\r\n");
 
